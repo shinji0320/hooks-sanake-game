@@ -8,7 +8,29 @@ import { initFields } from "./utils/index";
 const initialPosition = { x: 17, y: 17 };
 const initialValues = initFields(35, initialPosition);
 const defaultInterval = 100;
+
+const GameStatus = Object.freeze({
+  init: "init",
+  playing: "playing",
+  suspended: "suspended",
+  gameover: "gameover",
+});
+
 let timer = undefined;
+
+const Direction = Object.freeze({
+  up: "up",
+  right: "right",
+  left: "left",
+  down: "down",
+});
+
+const OppositeDirection = Object.freeze({
+  up: "down",
+  right: "left",
+  left: "right",
+  down: "up",
+});
 
 const unsubscribe = () => {
   if (!timer) {
@@ -17,35 +39,78 @@ const unsubscribe = () => {
   clearInterval(timer);
 };
 
+const isCollision = (fieldSize, position) => {
+  if (position.y < 0 || position.x < 0) {
+    return true;
+  }
+
+  if (position.y > fieldSize - 1 || position.x > fieldSize - 1) {
+    return true;
+  }
+
+  return false;
+};
+
 function App() {
   const [fields, setFields] = useState(initialValues);
   const [position, setPosition] = useState();
+  const [status, setStatus] = useState(GameStatus.init);
+  const [direction, setDirection] = useState(Direction.up);
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
     setPosition(initialPosition);
     //ゲームの中の時間を管理する
     timer = setInterval(() => {
-      setTick(tick => tick + 1)
+      setTick((tick) => tick + 1);
     }, defaultInterval);
     return unsubscribe;
   }, []);
 
-  const goUp = () => {
-    const { x, y } = position;
-    const nextY = Math.max(y - 1, 0);
-    fields[y][x] = "";
-    fields[nextY][x] = "snake";
-    setPosition({ x, y: nextY });
-    setFields(fields);
+  const onRestart = () => {
+    timer = setInterval(() => {
+      setTick((tick) => tick + 1);
+    }, defaultInterval);
+    setStatus(GameStatus.init);
+    setPosition(initialPosition);
+    setDirection(Direction.up);
+    setFields(initFields(35, initialPosition));
   };
 
-  useEffect(() => {
-    if (!position) {
+  const onChangeDirection = (newDirection) => {
+    if (status !== GameStatus.playing) {
+      return direction;
+    }
+    if (OppositeDirection[direction] === newDirection) {
       return;
     }
-    goUp();
+    setDirection(newDirection);
+  };
+  const onStart = () => setStatus(GameStatus.playing);
+
+  useEffect(() => {
+    if (!position || status !== GameStatus.playing) {
+      return;
+    }
+    const canContinue = goUp();
+    if (!canContinue) {
+      unsubscribe();
+      setStatus(GameStatus.gameover);
+    }
   }, [tick]);
+
+  const goUp = () => {
+    const { x, y } = position;
+    const newPosition = { x, y: y - 1 };
+    if (isCollision(fields.length, newPosition)) {
+      return false;
+    }
+    fields[y][x] = "";
+    fields[newPosition.y][x] = "snake";
+    setPosition(newPosition);
+    setFields(fields);
+    return true;
+  };
 
   return (
     <div className="App">
@@ -59,8 +124,8 @@ function App() {
         <Field fields={fields} />
       </main>
       <footer className="footer">
-        <Button />
-        <ManipulationPanel />
+        <Button status={status} onStart={onStart} onRestart={onRestart} />
+        <ManipulationPanel onChange={onChangeDirection} />
       </footer>
     </div>
   );
