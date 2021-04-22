@@ -32,6 +32,13 @@ const OppositeDirection = Object.freeze({
   down: "up",
 });
 
+const Delta = Object.freeze({
+  up: { x: 0, y: -1 },
+  right: { x: 1, y: 0 },
+  left: { x: -1, y: 0 },
+  down: { x: 0, y: 1 },
+});
+
 const unsubscribe = () => {
   if (!timer) {
     return;
@@ -67,6 +74,17 @@ function App() {
     return unsubscribe;
   }, []);
 
+  useEffect(() => {
+    if (!position || status !== GameStatus.playing) {
+      return;
+    }
+    const canContinue = handleMoving();
+    if (!canContinue) {
+      unsubscribe();
+      setStatus(GameStatus.gameover);
+    }
+  }, [tick]);
+
   const onRestart = () => {
     timer = setInterval(() => {
       setTick((tick) => tick + 1);
@@ -88,25 +106,19 @@ function App() {
   };
   const onStart = () => setStatus(GameStatus.playing);
 
-  useEffect(() => {
-    if (!position || status !== GameStatus.playing) {
-      return;
-    }
-    const canContinue = goUp();
-    if (!canContinue) {
-      unsubscribe();
-      setStatus(GameStatus.gameover);
-    }
-  }, [tick]);
-
-  const goUp = () => {
+  const handleMoving = () => {
     const { x, y } = position;
-    const newPosition = { x, y: y - 1 };
+    const delta = Delta[direction];
+    const newPosition = {
+      x: x + delta.x,
+      y: y + delta.y,
+    };
+
     if (isCollision(fields.length, newPosition)) {
       return false;
     }
     fields[y][x] = "";
-    fields[newPosition.y][x] = "snake";
+    fields[newPosition.y][newPosition.x] = "snake";
     setPosition(newPosition);
     setFields(fields);
     return true;
