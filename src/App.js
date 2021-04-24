@@ -66,8 +66,8 @@ const isCollision = (fieldSize, position) => {
 };
 
 const isEatingMyself = (fields, position) => {
-  return fields[position.y][position.x] === 'snake'
-}
+  return fields[position.y][position.x] === "snake";
+};
 
 function App() {
   const [fields, setFields] = useState(initialValues);
@@ -134,6 +134,8 @@ function App() {
 
   const onStart = () => setStatus(GameStatus.playing);
 
+  const onStop = () => setStatus(GameStatus.suspended);
+
   const handleMoving = () => {
     const { x, y } = body[0];
     const delta = Delta[direction];
@@ -142,7 +144,10 @@ function App() {
       y: y + delta.y,
     };
 
-    if (isCollision(fields.length, newPosition) || isEatingMyself(fields, newPosition)) {
+    if (
+      isCollision(fields.length, newPosition) ||
+      isEatingMyself(fields, newPosition)
+    ) {
       return false;
     }
     const newBody = [...body];
@@ -173,7 +178,12 @@ function App() {
         <Field fields={fields} />
       </main>
       <footer className="footer">
-        <Button status={status} onStart={onStart} onRestart={onRestart} />
+        <Button
+          status={status}
+          onStop={onStop}
+          onStart={onStart}
+          onRestart={onRestart}
+        />
         <ManipulationPanel onChange={onChangeDirection} />
       </footer>
     </div>
