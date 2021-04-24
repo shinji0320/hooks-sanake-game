@@ -4,50 +4,21 @@ import Field from "./components/Field";
 import Button from "./components/Button";
 import ManipulationPanel from "./components/ManipulationPanel";
 import { initFields, getFoodPosition } from "./utils/index";
+import {
+  defaultInterval,
+  defaultDifficulty,
+  Delta,
+  Difficulty,
+  Direction,
+  DirectionKeyCodeMap,
+  GameStatus,
+  OppositeDirection,
+  initialPosition,
+  initialValues,
+} from "./constants";
 
-const initialPosition = { x: 17, y: 17 };
-const initialValues = initFields(35, initialPosition);
-const defaultInterval = 100;
-const defaultDifficulty = 3
-
-const Difficulty = [1000, 500, 100, 50, 10]
-
-const GameStatus = Object.freeze({
-  init: "init",
-  playing: "playing",
-  suspended: "suspended",
-  gameover: "gameover",
-});
 
 let timer = undefined;
-
-export const Direction = Object.freeze({
-  up: "up",
-  right: "right",
-  left: "left",
-  down: "down",
-});
-
-const DirectionKeyCodeMap = Object({
-  37: Direction.left,
-  38: Direction.up,
-  39: Direction.right,
-  40: Direction.down,
-});
-
-const OppositeDirection = Object.freeze({
-  up: "down",
-  right: "left",
-  left: "right",
-  down: "up",
-});
-
-const Delta = Object.freeze({
-  up: { x: 0, y: -1 },
-  right: { x: 1, y: 0 },
-  left: { x: -1, y: 0 },
-  down: { x: 0, y: 1 },
-});
 
 const unsubscribe = () => {
   if (!timer) {
@@ -83,7 +54,7 @@ function App() {
   useEffect(() => {
     setBody([initialPosition]);
     //ゲームの中の時間を管理する
-    const interval = Difficulty[difficulty -1]
+    const interval = Difficulty[difficulty - 1];
     timer = setInterval(() => {
       setTick((tick) => tick + 1);
     }, interval);
